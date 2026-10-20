@@ -1,0 +1,14 @@
+# Python & Django
+*.pyc
+__pycache__/
+*.sqlite3
+*.db
+.env
+staticfiles/
+media/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.tmp

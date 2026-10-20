@@ -1,0 +1,20 @@
+# Environments & Secrets
+*.env
+backend/.env
+
+# Databases
+*.sqlite3
+backend/db.sqlite3
+
+# Python
+*.pyc
+__pycache__/
+
+# Flutter & Dart
+frontend/.dart_tool/
+frontend/build/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+
+# Logs
+*.log

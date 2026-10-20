@@ -1,0 +1,3 @@
+"""
+FactoryOS AI — Factories Application
+"""

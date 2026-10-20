@@ -1,0 +1,446 @@
+openapi: 3.0.3
+info:
+  title: FactoryOS AI — Universal Manufacturing Automation API
+  version: 1.0.0 (Phase 1)
+  description: Production-grade REST API powering the FactoryOS AI enterprise manufacturing
+    automation and intelligence platform.
+paths:
+  /api/factories/:
+    get:
+      operationId: factories_list
+      description: Retrieve all registered factories with industry categorization,
+        configuration status and active line counts.
+      summary: List Factories
+      parameters:
+      - in: query
+        name: industry_type
+        schema:
+          type: string
+        description: Filter by industry type (TEXTILE, CNC_ENGINEERING, FOOD_PROCESSING)
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Search by factory name or code
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter by configuration status (CONFIGURED, IN_PROGRESS, PENDING)
+      tags:
+      - factories
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FactoryList'
+          description: ''
+  /api/factories/{id}/:
+    get:
+      operationId: factories_retrieve
+      description: Retrieve factory details, production lines, and recent telemetry
+        snapshot.
+      summary: Get Factory Details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - factories
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactoryDetail'
+          description: ''
+        '404':
+          description: Factory not found
+  /api/factories/{id}/overview/:
+    get:
+      operationId: factories_overview_retrieve
+      description: Consolidated telemetry, KPI calculations, and line status breakdown
+        for the Factory Command Center.
+      summary: Get Factory Operational Overview
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - factories
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactoryOverview'
+          description: ''
+        '404':
+          description: Factory not found
+  /api/health/:
+    get:
+      operationId: health_retrieve
+      description: Returns system status, database connectivity, environment mode
+        and timestamp.
+      summary: System and Database Health Check
+      tags:
+      - health
+      responses:
+        '200':
+          description: System and PostgreSQL are operational
+        '503':
+          description: PostgreSQL or system services are degraded
+components:
+  schemas:
+    ConfigurationStatusEnum:
+      enum:
+      - CONFIGURED
+      - IN_PROGRESS
+      - PENDING
+      type: string
+      description: |-
+        * `CONFIGURED` - Configured
+        * `IN_PROGRESS` - In Progress
+        * `PENDING` - Pending Configuration
+    FactoryDetail:
+      type: object
+      description: Detailed serializer including related production lines and latest
+        telemetry snapshot.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 50
+        industry_type:
+          $ref: '#/components/schemas/IndustryTypeEnum'
+        industry_type_display:
+          type: string
+          readOnly: true
+        configuration_status:
+          $ref: '#/components/schemas/ConfigurationStatusEnum'
+        configuration_status_display:
+          type: string
+          readOnly: true
+        location:
+          type: string
+          maxLength: 255
+        country:
+          type: string
+          maxLength: 100
+        timezone:
+          type: string
+          maxLength: 50
+        total_production_lines:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        active_lines:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        is_active:
+          type: boolean
+        metadata: {}
+        organization:
+          allOf:
+          - $ref: '#/components/schemas/Organization'
+          readOnly: true
+        production_lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductionLine'
+          readOnly: true
+        latest_metrics:
+          allOf:
+          - $ref: '#/components/schemas/FactoryMetricSnapshot'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - configuration_status_display
+      - created_at
+      - id
+      - industry_type_display
+      - latest_metrics
+      - location
+      - name
+      - organization
+      - production_lines
+      - updated_at
+    FactoryList:
+      type: object
+      description: Concise serializer for the factory switcher and enterprise factory
+        list.
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 50
+        industry_type:
+          $ref: '#/components/schemas/IndustryTypeEnum'
+        industry_type_display:
+          type: string
+          readOnly: true
+        configuration_status:
+          $ref: '#/components/schemas/ConfigurationStatusEnum'
+        configuration_status_display:
+          type: string
+          readOnly: true
+        location:
+          type: string
+          maxLength: 255
+        country:
+          type: string
+          maxLength: 100
+        timezone:
+          type: string
+          maxLength: 50
+        total_production_lines:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        active_lines:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        is_active:
+          type: boolean
+        organization_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - code
+      - configuration_status_display
+      - created_at
+      - id
+      - industry_type_display
+      - location
+      - name
+      - organization_name
+      - updated_at
+    FactoryMetricSnapshot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        overall_oee:
+          type: number
+          format: double
+          description: Overall Equipment Effectiveness %
+        availability:
+          type: number
+          format: double
+          description: Machine availability rate %
+        performance:
+          type: number
+          format: double
+          description: Operational throughput rate %
+        quality_rate:
+          type: number
+          format: double
+          description: Quality yield percentage %
+        energy_consumption_kwh:
+          type: number
+          format: double
+        active_alerts_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        active_shifts:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        planned_units:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        actual_units:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        scrap_units:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - availability
+      - id
+      - overall_oee
+      - performance
+      - quality_rate
+      - timestamp
+    FactoryOverview:
+      type: object
+      description: |-
+        Executive and Command Center operational overview payload for a single factory.
+        Combines factory metadata, latest telemetry, line status aggregations and shift data.
+      properties:
+        factory:
+          $ref: '#/components/schemas/FactoryList'
+        metrics:
+          allOf:
+          - $ref: '#/components/schemas/FactoryMetricSnapshot'
+          nullable: true
+        lines_summary:
+          type: object
+          additionalProperties: {}
+        production_lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductionLine'
+        alerts_summary:
+          type: object
+          additionalProperties: {}
+        shift_progress:
+          type: object
+          additionalProperties: {}
+      required:
+      - alerts_summary
+      - factory
+      - lines_summary
+      - metrics
+      - production_lines
+      - shift_progress
+    IndustryTypeEnum:
+      enum:
+      - TEXTILE
+      - CNC_ENGINEERING
+      - FOOD_PROCESSING
+      type: string
+      description: |-
+        * `TEXTILE` - Textile Manufacturing
+        * `CNC_ENGINEERING` - CNC Engineering
+        * `FOOD_PROCESSING` - Food Processing
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          description: Enterprise Organization Name
+          maxLength: 255
+        slug:
+          type: string
+          maxLength: 100
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - slug
+    ProductionLine:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        code:
+          type: string
+          maxLength: 50
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        status_display:
+          type: string
+          readOnly: true
+        current_product:
+          type: string
+          maxLength: 255
+        efficiency_rate:
+          type: number
+          format: double
+          description: Current efficiency percentage (0-100)
+        target_hourly_units:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        actual_hourly_units:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        operator_count:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        last_maintenance_date:
+          type: string
+          format: date
+          nullable: true
+        metadata: {}
+      required:
+      - code
+      - id
+      - name
+      - status_display
+    StatusEnum:
+      enum:
+      - RUNNING
+      - IDLE
+      - MAINTENANCE
+      - OFFLINE
+      type: string
+      description: |-
+        * `RUNNING` - Running
+        * `IDLE` - Idle
+        * `MAINTENANCE` - Maintenance
+        * `OFFLINE` - Offline
